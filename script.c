@@ -1721,7 +1721,7 @@ PAL_InterpretInstruction(
       // Load the last saved game
       //
       PAL_FadeOut(1);
-      PAL_InitGameData(gpGlobals->bCurrentSaveSlot);
+      PAL_SetLoadFlags(kLoadGlobalData);
       return 0; // don't go further
 
    case 0x004F:
@@ -3098,7 +3098,7 @@ MESSAGE_GetSpan(
 }
 
 WORD
-PAL_RunTriggerScript(
+PAL_RunTriggerScriptReal(
    WORD           wScriptEntry,
    WORD           wEventObjectID
 )
@@ -3122,6 +3122,8 @@ PAL_RunTriggerScript(
    static WORD       wLastEventObject = 0;
 
    WORD              wNextScriptEntry;
+   WORD              wBakNextScriptEntry;
+   WORD              wRet;
    BOOL              fEnded;
    LPSCRIPTENTRY     pScript;
    LPEVENTOBJECT     pEvtObj = NULL;
@@ -3130,6 +3132,7 @@ PAL_RunTriggerScript(
    extern BOOL       g_fUpdatedInBattle; // HACKHACK
 
    wNextScriptEntry = wScriptEntry;
+   wBakNextScriptEntry = wNextScriptEntry;
    fEnded = FALSE;
    g_fUpdatedInBattle = FALSE;
 
@@ -3220,8 +3223,8 @@ PAL_RunTriggerScript(
          //
          // Call script
          //
-         PAL_RunTriggerScript(pScript->rgwOperand[0],
-            ((pScript->rgwOperand[1] == 0) ? wEventObjectID : pScript->rgwOperand[1]));
+         PAL_RunTriggerScriptReal(pScript->rgwOperand[0],
+              ((pScript->rgwOperand[1] == 0) ? wEventObjectID : pScript->rgwOperand[1]));
          wScriptEntry++;
          break;
 
@@ -3433,10 +3436,21 @@ PAL_RunTriggerScript(
       }
    }
 
+breakscript:
    PAL_EndDialog();
    g_iCurEquipPart = -1;
 
    return wNextScriptEntry;
+}
+
+WORD
+PAL_RunTriggerScript(
+   WORD           wScriptEntry,
+   WORD           wEventObjectID
+)
+{
+   WORD wRet = PAL_RunTriggerScriptReal(wScriptEntry, wEventObjectID);
+   return wRet == (WORD)-1 ? 0 : wRet;
 }
 
 WORD

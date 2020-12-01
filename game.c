@@ -85,7 +85,7 @@ PAL_GameMain(
    //
    // Initialize game data and set the flags to load the game resources.
    //
-   PAL_InitGameData(gpGlobals->bCurrentSaveSlot);
+   PAL_SetLoadFlags(kLoadGlobalData);
 
    //
    // Run the main game loop.
